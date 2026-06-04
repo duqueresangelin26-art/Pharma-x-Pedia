@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Pédiatrie & Pharmacologie — UNIFA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Raleway:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4ff;
+    --glass: rgba(255,255,255,0.55);
+    --glass2: rgba(255,255,255,0.85);
+    --border: rgba(120,160,255,0.25);
+    --accent1: #3b6cf8;
+    --accent2: #7c3aed;
+    --accent3: #06b6d4;
+    --gold: #f59e0b;
+    --correct: #10b981;
+    --wrong: #ef4444;
+    --text: #1e293b;
+    --muted: #64748b;
+    --shadow: 0 8px 32px rgba(59,108,248,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Raleway', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ===== BACKGROUND 3D ANIMATED ===== */
+  .bg-canvas {
+    position: fixed; inset: 0; z-index: 0;
+    background: linear-gradient(135deg, #e0eaff 0%, #f5f0ff 40%, #e0f7ff 100%);
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(60px); opacity: 0.45;
+    animation: floatOrb 12s ease-in-out infinite;
+  }
+  .orb1 { width:420px;height:420px;background:radial-gradient(circle,#a5b4fc,#6366f1); top:-100px;left:-120px; animation-delay:0s; }
+  .orb2 { width:320px;height:320px;background:radial-gradient(circle,#c4b5fd,#8b5cf6); top:40%;right:-100px; animation-delay:-4s; }
+  .orb3 { width:280px;height:280px;background:radial-gradient(circle,#67e8f9,#0891b2); bottom:-80px;left:30%; animation-delay:-8s; }
+  .orb4 { width:200px;height:200px;background:radial-gradient(circle,#fde68a,#f59e0b); bottom:10%;right:10%; animation-delay:-2s; }
+
+  @keyframes floatOrb {
+    0%,100%{ transform: translate(0,0) scale(1); }
+    33%{ transform: translate(30px,-40px) scale(1.05); }
+    66%{ transform: translate(-20px,20px) scale(0.97); }
+  }
+
+  .grid-lines {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(99,102,241,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.07) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridDrift 25s linear infinite;
+  }
+  @keyframes gridDrift { from{background-position:0 0;} to{background-position:60px 60px;} }
+
+  /* ===== FLOATING PARTICLES ===== */
+  .particles { position:fixed;inset:0;pointer-events:none;z-index:1; }
+  .particle {
+    position:absolute;border-radius:50%;
+    animation: particleFloat linear infinite;
+  }
+  @keyframes particleFloat {
+    0%{transform:translateY(110vh) rotate(0deg);opacity:0;}
+    10%{opacity:1;}
+    90%{opacity:1;}
+    100%{transform:translateY(-10vh) rotate(720deg);opacity:0;}
+  }
+
+  /* ===== LAYOUT ===== */
+  #app {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 16px 60px;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    animation: slideDown 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-50px) scale(0.9);} to{opacity:1;transform:none;} }
+
+  .header-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 6px 18px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{box-shadow:0 4px 15px rgba(99,102,241,0.4);} 50%{box-shadow:0 4px 30px rgba(99,102,241,0.7);} }
+
+  .header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(22px, 5vw, 42px);
+    background: linear-gradient(135deg, #1e293b 0%, var(--accent1) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2; margin-bottom: 10px;
+  }
+  .header p {
+    color: var(--muted); font-size: 14px; font-weight: 400;
+    letter-spacing: 1px;
+  }
+
+  /* ===== STATS BAR ===== */
+  .stats-bar {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 30px;
+    animation: fadeIn 1s 0.4s both;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:none;} }
+
+  .stat-chip {
+    background: var(--glass2);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 10px 22px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: var(--shadow);
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    transition: transform 0.2s;
+  }
+  .stat-chip:hover { transform: translateY(-2px); }
+  .stat-icon { font-size: 18px; }
+  .stat-value { font-family: 'Space Mono', monospace; color: var(--accent1); font-size: 16px; }
+
+  /* ===== PROGRESS ===== */
+  .progress-wrap {
+    width: 100%; max-width: 680px;
+    margin-bottom: 28px;
+    animation: fadeIn 1s 0.5s both;
+  }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+  }
+  .progress-track {
+    height: 8px; background: rgba(99,102,241,0.12);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content:''; position:absolute; top:0;right:0;bottom:0;
+    width:40px;
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,0.6));
+    animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer { from{opacity:0;} 50%{opacity:1;} to{opacity:0;} }
+
+  /* ===== QUESTION CARD ===== */
+  .card-wrapper {
+    width: 100%; max-width: 680px;
+    perspective: 1200px;
+    animation: cardEntrance 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes cardEntrance { from{opacity:0;transform:translateY(40px) rotateX(10deg) scale(0.95);} to{opacity:1;transform:none;} }
+
+  .question-card {
+    background: var(--glass2);
+    backdrop-filter: blur(30px);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 36px;
+    box-shadow:
+      0 20px 60px rgba(99,102,241,0.12),
+      0 2px 4px rgba(255,255,255,0.8) inset,
+      0 -1px 0 rgba(99,102,241,0.08) inset;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s;
+  }
+  .question-card::before {
+    content:''; position:absolute;top:0;left:0;right:0;height:4px;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+  }
+  .question-card::after {
+    content:''; position:absolute;
+    top:-80px;right:-80px;
+    width:200px;height:200px;
+    background: radial-gradient(circle, rgba(99,102,241,0.08), transparent);
+    pointer-events:none;
+  }
+
+  .q-category {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12));
+    border: 1px solid rgba(99,102,241,0.2);
+    color: var(--accent2);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 50px;
+    margin-bottom: 20px;
+  }
+
+  .q-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .q-text {
+    font-size: clamp(15px, 3vw, 18px);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  /* Clinical case styling */
+  .q-case {
+    background: linear-gradient(135deg, rgba(6,182,212,0.08), rgba(99,102,241,0.08));
+    border: 1px solid rgba(6,182,212,0.2);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .q-case strong { color: var(--accent1); }
+
+  /* ===== OPTIONS ===== */
+  .options { display: flex; flex-direction: column; gap: 12px; }
+
+  .option-btn {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,0.7);
+    border: 2px solid rgba(99,102,241,0.15);
+    border-radius: 16px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    font-family: 'Raleway', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .option-btn::before {
+    content:''; position:absolute;inset:0;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    opacity:0; transition:opacity 0.25s;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: rgba(99,102,241,0.5);
+    transform: translateX(6px) scale(1.01);
+    box-shadow: 0 8px 25px rgba(99,102,241,0.2);
+  }
+  .option-btn:hover:not(:disabled) .opt-letter { background: var(--accent1); color:white; }
+
+  .opt-letter {
+    flex-shrink: 0;
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(99,102,241,0.1);
+    color: var(--accent1);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    transition: all 0.25s;
+    position: relative; z-index:1;
+  }
+  .opt-text { position:relative;z-index:1;flex:1; }
+
+  .option-btn.correct {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1));
+    border-color: var(--correct);
+    animation: correctPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .option-btn.correct .opt-letter { background: var(--correct); color:white; }
+  @keyframes correctPop { 0%{transform:scale(1);} 50%{transform:scale(1.04) translateX(6px);} 100%{transform:scale(1) translateX(6px);} }
+
+  .option-btn.wrong {
+    background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(220,38,38,0.1));
+    border-color: var(--wrong);
+    animation: wrongShake 0.4s ease;
+  }
+  .option-btn.wrong .opt-letter { background: var(--wrong); color:white; }
+  @keyframes wrongShake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-6px);} 40%,80%{transform:translateX(6px);} }
+
+  .option-btn:disabled { cursor: not-allowed; }
+
+  /* ===== FEEDBACK ===== */
+  .feedback-box {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    animation: feedbackSlide 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    display: none;
+  }
+  @keyframes feedbackSlide { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:none;} }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb {
+    background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.08));
+    border: 1px solid rgba(16,185,129,0.3);
+    color: #065f46;
+  }
+  .feedback-box.wrong-fb {
+    background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.07));
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #991b1b;
+  }
+  .feedback-title { font-weight: 700; margin-bottom: 6px; font-size: 15px; }
+
+  /* ===== NAVIGATION ===== */
+  .nav-area {
+    margin-top: 28px;
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700; font-size: 14px;
+    cursor: pointer; border: none;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    letter-spacing: 0.5px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: white;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 30px rgba(99,102,241,0.5); }
+  .btn-secondary {
+    background: var(--glass2);
+    color: var(--accent1);
+    border: 2px solid rgba(99,102,241,0.25);
+    backdrop-filter: blur(10px);
+  }
+  .btn-secondary:hover { transform: translateY(-2px); border-color: var(--accent1); }
+  .btn:disabled { opacity: 0.4; cursor:not-allowed; transform:none!important; }
+
+  /* ===== RESULT SCREEN ===== */
+  #result-screen {
+    display: none;
+    width: 100%; max-width: 680px;
+    animation: cardEntrance 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  .result-card {
+    background: var(--glass2);
+    backdrop-filter: blur(30px);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(99,102,241,0.15);
+    position: relative; overflow: hidden;
+  }
+  .result-card::before {
+    content:''; position:absolute;top:0;left:0;right:0;height:5px;
+    background: linear-gradient(90deg, var(--correct), var(--accent1), var(--accent2));
+  }
+
+  .result-emoji {
+    font-size: 72px;
+    display: block; margin-bottom: 20px;
+    animation: trophyBounce 1s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+  }
+  @keyframes trophyBounce { from{opacity:0;transform:scale(0) rotate(-20deg);} to{opacity:1;transform:none;} }
+
+  .result-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(18px, 4vw, 28px);
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom: 12px;
+  }
+
+  .result-score-ring {
+    width: 160px; height: 160px;
+    margin: 28px auto;
+    position: relative;
+  }
+  .result-score-ring svg { transform: rotate(-90deg); }
+  .ring-bg { fill:none; stroke:rgba(99,102,241,0.1); stroke-width:12; }
+  .ring-fill { fill:none; stroke-width:12; stroke-linecap:round;
+    stroke: url(#scoreGrad);
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.34,1.56,0.64,1) 0.5s;
+  }
+  .ring-text {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    text-align:center;
+  }
+  .ring-pct { font-family:'Space Mono',monospace; font-size:32px; font-weight:700; color:var(--accent1); }
+  .ring-label { font-size:11px; color:var(--muted); letter-spacing:1px; }
+
+  .result-breakdown {
+    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+    margin: 24px 0;
+  }
+  .breakdown-item {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 24px;
+    text-align:center;
+  }
+  .breakdown-val { font-family:'Space Mono',monospace; font-size:28px; font-weight:700; }
+  .breakdown-val.c { color:var(--correct); }
+  .breakdown-val.w { color:var(--wrong); }
+  .breakdown-label { font-size:12px; color:var(--muted); margin-top:4px; }
+
+  .result-msg {
+    font-size:15px; color:var(--muted); line-height:1.6;
+    margin-bottom: 28px;
+  }
+
+  /* ===== INTRO SCREEN ===== */
+  #intro-screen {
+    width:100%;max-width:680px;
+    animation: cardEntrance 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .intro-card {
+    background: var(--glass2);
+    backdrop-filter:blur(30px);
+    border:1px solid var(--border);
+    border-radius:28px; padding:48px 40px;
+    text-align:center;
+    box-shadow: 0 20px 60px rgba(99,102,241,0.12);
+    position:relative;overflow:hidden;
+  }
+  .intro-card::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));
+  }
+  .intro-icon { font-size:64px; display:block;margin-bottom:20px;
+    animation: introIcon 2s ease-in-out infinite; }
+  @keyframes introIcon { 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-8px) rotate(5deg);} }
+
+  .intro-title {
+    font-family:'Cinzel Decorative',serif;
+    font-size:clamp(20px,4vw,30px);
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text; margin-bottom:16px;
+  }
+  .intro-desc { font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:28px; }
+
+  .topics-grid {
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:12px; margin-bottom:32px;
+  }
+  .topic-chip {
+    background:rgba(255,255,255,0.7);
+    border:1px solid var(--border);
+    border-radius:14px;padding:14px 12px;
+    font-size:13px;font-weight:600;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .topic-chip span { font-size:22px; }
+  .topic-count {
+    font-family:'Space Mono',monospace;font-size:11px;
+    color:var(--accent1);
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position:fixed;bottom:30px;right:30px;z-index:999;
+    background:var(--glass2);
+    backdrop-filter:blur(20px);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 20px;
+    box-shadow:var(--shadow);
+    font-size:14px;font-weight:600;color:var(--text);
+    display:flex;align-items:center;gap:10px;
+    transform:translateX(150%);
+    transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform:translateX(0); }
+
+  /* ===== CONFETTI ===== */
+  .confetti-piece {
+    position:fixed;pointer-events:none;z-index:999;
+    animation:confettiFall 3s ease-in forwards;
+  }
+  @keyframes confettiFall {
+    0%{transform:translateY(-20px) rotate(0deg);opacity:1;}
+    100%{transform:translateY(110vh) rotate(720deg);opacity:0;}
+  }
+
+  /* ===== MOBILE ===== */
+  @media(max-width:480px){
+    .question-card{padding:24px 18px;}
+    .intro-card,.result-card{padding:32px 20px;}
+    .btn{padding:12px 20px;font-size:13px;}
+    .nav-area{gap:8px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="orb orb4"></div>
+  <div class="grid-lines"></div>
+</div>
+<div class="particles" id="particles"></div>
+
+<div id="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">🏥 UNIFA · MÉDECINE · 4ᵉ & 5ᵉ ANNÉE</div>
+    <h1>Pédiatrie & Pharmacologie</h1>
+    <p>Évaluation globale interactive · QCM corrigés</p>
+  </div>
+
+  <!-- INTRO SCREEN -->
+  <div id="intro-screen">
+    <div class="intro-card">
+      <span class="intro-icon">🩺</span>
+      <div class="intro-title">Quiz d'Évaluation Globale</div>
+      <p class="intro-desc">
+        50 questions couvrant la pédiatrie générale et la pharmacologie, issues des examens officiels UNIFA. Testez vos connaissances et recevez des explications détaillées pour chaque réponse.
+      </p>
+      <div class="topics-grid">
+        <div class="topic-chip"><span>🫁</span>Pneumologie<div class="topic-count">8 QCM</div></div>
+        <div class="topic-chip"><span>🍼</span>Allaitement<div class="topic-count">7 QCM</div></div>
+        <div class="topic-chip"><span>🍗</span>Malnutrition<div class="topic-count">12 QCM</div></div>
+        <div class="topic-chip"><span>🫀</span>Néphrologie<div class="topic-count">9 QCM</div></div>
+        <div class="topic-chip"><span>🌡️</span>Fièvre & Infections<div class="topic-count">7 QCM</div></div>
+        <div class="topic-chip"><span>💊</span>Pharmacologie<div class="topic-count">7 QCM</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="font-size:16px;padding:18px 48px;">
+        ⚡ Commencer le Quiz
+      </button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen" style="display:none;width:100%;max-width:680px;">
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-chip"><span class="stat-icon">📋</span>Question <span class="stat-value" id="qNum">1</span></div>
+      <div class="stat-chip"><span class="stat-icon">✅</span>Correct <span class="stat-value" id="scoreCorrect" style="color:var(--correct)">0</span></div>
+      <div class="stat-chip"><span class="stat-icon">❌</span>Erreur <span class="stat-value" id="scoreWrong" style="color:var(--wrong)">0</span></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="progressText">0 / 50</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="card-wrapper" id="cardWrapper">
+      <div class="question-card" id="questionCard">
+        <div class="q-category" id="qCategory">🏥 Pédiatrie</div>
+        <div class="q-number" id="qNumberLabel">Question 1 / 50</div>
+        <div id="qCase" class="q-case" style="display:none;"></div>
+        <div class="q-text" id="qText"></div>
+        <div class="options" id="optionsContainer"></div>
+        <div class="feedback-box" id="feedbackBox"></div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-area">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">← Précédent</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="result-screen">
+    <div class="result-card">
+      <span class="result-emoji" id="resultEmoji">🏆</span>
+      <div class="result-title" id="resultTitle">Résultat Final</div>
+      <p class="result-msg" id="resultMsg">Votre performance globale</p>
+      <div class="result-score-ring">
+        <svg viewBox="0 0 160 160" width="160" height="160">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#3b6cf8"/>
+              <stop offset="100%" style="stop-color:#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="80" cy="80" r="68"/>
+          <circle class="ring-fill" id="ringFill" cx="80" cy="80" r="68"
+            stroke-dasharray="427" stroke-dashoffset="427"/>
+        </svg>
+        <div class="ring-text">
+          <div class="ring-pct" id="ringPct">0%</div>
+          <div class="ring-label">SCORE</div>
+        </div>
+      </div>
+      <div class="result-breakdown">
+        <div class="breakdown-item">
+          <div class="breakdown-val c" id="resCorrect">0</div>
+          <div class="breakdown-label">✅ Correctes</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-val w" id="resWrong">0</div>
+          <div class="breakdown-label">❌ Incorrectes</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-val" id="resSkip" style="color:var(--gold)">0</div>
+          <div class="breakdown-label">⏭️ Sautées</div>
+        </div>
+      </div>
+      <div class="nav-area">
+        <button class="btn btn-secondary" onclick="reviewAnswers()">📖 Réviser</button>
+        <button class="btn btn-primary" onclick="restartQuiz()">🔄 Recommencer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Bonne réponse!</span>
+</div>
+
+<script>
+// ===== QUESTIONS DATABASE =====
+const questions = [
+  // ALLAITEMENT
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"Le lait maternel qui est riche en immunoglobulines, en anticorps et en protéines, mais moins de graisses et de glucides est :",
+   opts:["Lait de transition","Lait mature","Le colostrum","Aucune"], ans:1,
+   expl:"Le <b>lait mature</b> est effectivement riche en immunoglobulines, anticorps et protéines mais contient moins de graisses et de glucides que le colostrum. Le colostrum, lui, est très riche en protéines et immunoglobulines mais peu calorique en graisses."},
+
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"La position la plus courante pour allaiter un nourrisson est :",
+   opts:["Madone","Madone inversée","Ballon de Rugby","Aucune"], ans:0,
+   expl:"La position <b>Madone</b> (ou berceau) est la position d'allaitement la plus classique : la tête du bébé repose dans le creux du coude de la mère."},
+
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"La principale contre-indication à l'allaitement maternel est :",
+   opts:["Galactosémie chez le nourrisson","Calcémie chez la mère","Hypoglycémie chez le nourrisson","Aucune"], ans:0,
+   expl:"La <b>galactosémie congénitale</b> chez le nourrisson est la principale contre-indication absolue à l'allaitement maternel, car le lactose du lait maternel ne peut pas être métabolisé."},
+
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"Le lait maternel contient moins d'immunoglobulines que le lait de vache :",
+   opts:["Vrai","Faux"], ans:1,
+   expl:"<b>FAUX.</b> Le lait maternel contient <em>plus</em> d'immunoglobulines que le lait de vache, notamment les IgA sécrétoires. C'est l'un des avantages majeurs de l'allaitement maternel."},
+
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"Ce sont des laits de substitution, sauf :",
+   opts:["Gallia","Enfamil","Modilac","Alaska"], ans:3,
+   expl:"<b>Alaska</b> n'est pas un lait de substitution pour nourrisson. Gallia, Enfamil et Modilac sont des préparations infantiles commerciales."},
+
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"L'allaitement maternel exclusif exige que, sauf :",
+   opts:["L'enfant reçoive le lait de sa mère","L'enfant reçoive le lait d'une nourrice","L'enfant reçoive de l'eau","L'enfant reçoive le lait provenant d'une banque de lait"], ans:2,
+   expl:"L'allaitement exclusif signifie <em>uniquement</em> le lait maternel — de la mère, d'une nourrice, ou d'une banque de lait. <b>Donner de l'eau</b> exclut le caractère « exclusif »."},
+
+  {cat:"🍼 Allaitement & Nutrition néonatale", q:"Le colostrum :",
+   opts:["Contient plus de protéines et de glucides","Contient plus de protéines et d'immunoglobulines","Contient plus de protéines et de graisses","Aucune"], ans:1,
+   expl:"Le <b>colostrum</b> (premiers jours) est riche en protéines et en immunoglobulines (surtout IgA), ce qui lui confère un rôle immunoprotecteur majeur pour le nouveau-né."},
+
+  // MALNUTRITION
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Le signe clinique majeur du Kwashiorkor est :",
+   opts:["La cachexie","La maigreur","L'œdème","L'anémie"], ans:2,
+   expl:"Le signe cardinal du <b>Kwashiorkor</b> est l'<b>œdème</b> (surtout des membres inférieurs), secondaire à la carence protéique sévère. La cachexie est plus caractéristique du marasme."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Le lait thérapeutique destiné à faire prendre du poids à l'enfant hospitalisé en USN est :",
+   opts:["F125","F75","F100","Aucune"], ans:2,
+   expl:"Le <b>F100</b> (100 kcal/100 ml) est le lait de réhabilitation nutritionnelle — phase 2 — destiné à la reprise de poids. Le F75 est le lait de stabilisation (phase 1)."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Un sachet de PLUMPY NUT contient :",
+   opts:["100 Kcal","200 Kcal","250 Kcal","500 Kcal"], ans:2,
+   expl:"Un sachet de <b>PLUMPY NUT</b> (aliment thérapeutique prêt à l'emploi) contient environ <b>250 kcal</b> par sachet de 92 g."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Les complications à redouter chez les malnutris pendant les 24 premières heures suivant l'hospitalisation sont :",
+   opts:["Anémie et septicémie","Hypothermie et hypoglycémie","Hypothermie et hypocalcémie","Hypoglycémie et hyponatrémie"], ans:1,
+   expl:"Les deux grandes urgences vitales à l'admission d'un enfant malnutri sévère sont l'<b>hypothermie</b> et l'<b>hypoglycémie</b> — toutes deux mortelles si non corrigées rapidement."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Paramètres anthropométriques permettant de faire le diagnostic de la malnutrition aiguë sévère, sauf :",
+   opts:["Taille","Poids","Rapport poids/taille","Rapport Taille/âge","Périmètre brachial"], ans:3,
+   expl:"Le <b>Rapport Taille/âge</b> mesure le retard de croissance (malnutrition chronique), <em>non</em> la malnutrition aiguë sévère. Les critères de MAS sont : P/T < -3 ET, périmètre brachial < 11,5 cm, ou œdème bilatéral."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Dans la prise en charge de la MAS type marasme, en phase 1 (stabilisation) :",
+   opts:["Le F75 est donné en Phase 1 en absence d'œdème","Le F75 est destiné à faire prendre de poids","Le F75 est donné en Phase 1 et le F100 en Phase 2","La vitamine A est donnée à J1, J2 et à la sortie"], ans:2,
+   expl:"Le protocole OMS : <b>F75 en Phase 1</b> (stabilisation) puis <b>F100 en Phase 2</b> (réhabilitation). La vitamine A est donnée à J1, J2 et à la sortie (Réponse d également vraie, mais c est la meilleure combinaison)."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"L'œdème dans la malnutrition aiguë sévère type Kwashiorkor est expliqué par :",
+   opts:["Une fuite massive de protéines dans les urines","Une carence en protéines","Utilisation des graisses par l'organisme comme source d'énergie","Carence en glucides"], ans:1,
+   expl:"Dans le <b>Kwashiorkor</b>, l'œdème est causé par la <b>carence en protéines</b> → ↓ albumine sérique → ↓ pression oncotique → fuite du liquide vers l'espace interstitiel → œdème."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Le resomal, solution de réhydratation pour les enfants malnutris, a :",
+   opts:["Plus de sodium et moins de potassium que le SRO normal","Plus de potassium et moins de sodium que le SRO normal","Plus de calcium et de sodium que le SRO normal","Aucune"], ans:1,
+   expl:"Le <b>Resomal</b> a <em>moins</em> de sodium (45 mmol/L vs 90) et <em>plus</em> de potassium que le SRO standard, car les malnutris ont souvent un déficit en potassium et risquent la surcharge sodée."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Le lait thérapeutique F75 :",
+   opts:["A 75 Kcal pour chaque 100 ml de lait","Est un lait de stabilisation","Est donné en phase 2","A et B sont vraies","A et C sont vraies"], ans:3,
+   expl:"Le <b>F75</b> = 75 kcal/100 ml (a vrai) ET c'est le lait de <b>stabilisation — phase 1</b> (b vrai). Il n'est pas donné en phase 2 (c faux). Donc <b>a et b sont vraies</b>."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Un enfant marasmique c'est quelqu'un qui :",
+   opts:["Est jovial","Est grincheux","Présente des œdèmes","Est cachexique","A un faciès simiesque"], ans:3,
+   expl:"L'enfant marasmique est <b>cachexique</b> (fonte musculaire et adipeuse sévère), avec un faciès simiesque (vieillard), mais sans œdème. Le Kwashiorkor présente des œdèmes."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"L'œdème dans la MAS type Kwashiorkor est expliqué par :",
+   opts:["Une fuite massive de protéine","Une carence en protéine et en énergie","Une carence surtout en protéine","Une carence surtout en énergie"], ans:2,
+   expl:"Le Kwashiorkor est dû à une <b>carence surtout en protéines</b> (avec apports en glucides parfois suffisants), contrairement au marasme qui est une carence globale en énergie."},
+
+  {cat:"🍗 Malnutrition aiguë sévère", q:"Les 2 complications à craindre à l'admission d'un enfant avec malnutrition aiguë sévère sont :",
+   opts:["Décompensation cardiaque et septicémie","La septicémie et l'hypothermie","L'hypoglycémie et l'hypothermie","L'anémie sévère et l'hypothermie"], ans:2,
+   expl:"Les <b>2 complications vitales immédiates</b> à l'admission : <b>hypoglycémie</b> (glycémie < 54 mg/dl) et <b>hypothermie</b> (T < 35,5°C). Ces deux éléments tuent rapidement sans correction."},
+
+  // CAS CLINIQUE - KWASHIORKOR
+  {cat:"📋 Cas clinique — Malnutrition", caseTxt:"Bruno, garçonnet de 3 ans, vient pour fièvre, diarrhée, vomissements et augmentation de volume des membres inférieurs. Poids 8,5 kg (<3e percentile), T 85 cm, P/T <−2ET. Selles glairo-sanguinolentes non abondantes. Tachycardie 140/min, FR 30/min, T° 37,5°C. Cheveux roux, conjonctives pâles, œdème 2+ membres inf., déshydratation modérée, TRC < 3 secondes.",
+   q:"À la lumière de ces trouvailles cliniques, quel est le diagnostic le plus probable ?",
+   opts:["Décompensation cardiaque","Insuffisance rénale aiguë","Kwashiorkor","Insuffisance pulmonaire"], ans:2,
+   expl:"<b>Kwashiorkor</b> : enfant < 3e percentile, œdème bilatéral 2+, cheveux roux et décolorés, hypoalbuminémie attendue. L'association œdème + cheveux roux + malnutrition profonde est pathognomonique."},
+
+  {cat:"📋 Cas clinique — Malnutrition", q:"L'œdème 2+, des membres inférieurs intéresse :",
+   opts:["Les dos des pieds jusqu'aux chevilles","Les dos des pieds jusqu'à l'abdomen","Les dos des pieds jusqu'aux jambes","Aucune"], ans:2,
+   expl:"La gradation des œdèmes : 1+ = dos des pieds, <b>2+ = jusqu'aux jambes</b>, 3+ = jusqu'aux genoux, 4+ = généralisé (anasarque)."},
+
+  {cat:"📋 Cas clinique — Malnutrition", q:"On a réalisé une glycémie capillaire qui est revenue à 25 mg/dl. Bruno :",
+   opts:["A une hyperglycémie","A une hypoglycémie","La glycémie est normale pour son âge","A le diabète type 1"], ans:1,
+   expl:"Une glycémie à <b>25 mg/dl</b> est une <b>hypoglycémie sévère</b> (normale > 70 mg/dl). C'est une urgence vitale chez le malnutri."},
+
+  {cat:"📋 Cas clinique — Malnutrition", q:"Quelle sera la meilleure attitude face à une glycémie à 25 mg/dl ?",
+   opts:["Donner de l'eau sucrée à Bruno par la bouche","Mettre une voie veineuse et donner du D/W 10%","Mettre un tube de Levine et donner de l'eau sucrée","Aucune"], ans:1,
+   expl:"Hypoglycémie sévère chez un enfant inconscient ou sévèrement malnutri → <b>voie veineuse + D/W 10%</b> (2 ml/kg en bolus IV), puis glucose oral dès que possible."},
+
+  {cat:"📋 Cas clinique — Malnutrition", q:"Pour apprécier le degré de déshydratation chez Bruno :",
+   opts:["On va évaluer les muqueuses","On va évaluer le signe du pli","On va évaluer la paume des mains","Aucune"], ans:1,
+   expl:"Chez un malnutri, le <b>signe du pli cutané</b> est le meilleur indicateur de déshydratation (les muqueuses peuvent être trompeuses et la paume des mains est peu fiable)."},
+
+  {cat:"📋 Cas clinique — Malnutrition", q:"Selon le mécanisme physiopathologique de la diarrhée (selles glairo-sanguinolentes) :",
+   opts:["Bruno a une diarrhée invasive","Bruno a une diarrhée sécrétoire","Bruno a une diarrhée par accélération du transit intestinal","Aucune"], ans:0,
+   expl:"Les selles <b>glairo-sanguinolentes</b> = diarrhée <b>invasive</b> (bactérienne). Les germes pénètrent la muqueuse intestinale causant inflammation, glaires et sang."},
+
+  // NEPHROLOGIE
+  {cat:"🫀 Néphropédiatrie", caseTxt:"Bruno, garçonnet de 6 ans. Céphalées, œdème du visage et membres inf., hématurie. Infection cutanée il y a 2 semaines. TA 145/90, FC 120, FR 30, T° 36,5°C. Conjonctives peu rosées, BDC réguliers, poumons rudes, abdomen légèrement météorisé, œdème 2+. Bandelette urinaire : protéines 2+, sang 4+.",
+   q:"Quel est le diagnostic le plus probable ?",
+   opts:["Syndrome néphrotique impur","Syndrome néphrotique pur","Glomérulonéphrite aiguë post infectieuse","Décompensation cardiaque"], ans:0,
+   expl:"<b>Syndrome néphrotique impur</b> : combine protéinurie (2+) <em>et</em> hématurie (4+) <em>et</em> HTA <em>et</em> contexte infectieux récent. Le SN pur n'a pas d'hématurie ni d'HTA."},
+
+  {cat:"🫀 Néphropédiatrie", q:"Quel est le germe le plus souvent en cause dans la glomérulonéphrite post-infectieuse ?",
+   opts:["Staphylococcus aureus","Streptocoque β hémolytique du groupe A","Streptocoque β hémolytique du groupe B","Candida albicans"], ans:1,
+   expl:"Le <b>Streptocoque β-hémolytique du groupe A</b> (SGA) est la cause classique de la glomérulonéphrite aiguë post-infectieuse (GNAPI), secondaire à une angine ou une pyodermite streptococcique."},
+
+  {cat:"🫀 Néphropédiatrie", q:"Concernant le suivi de Bruno, l'hématurie macroscopique disparaît quand ?",
+   opts:["1 semaine","2 mois","4 semaines","8 semaines"], ans:2,
+   expl:"Dans la GNAPI, l'hématurie macroscopique disparaît en <b>3 à 4 semaines</b>. La protéinurie peut persister quelques mois. L'évolution est favorable dans > 95% des cas."},
+
+  {cat:"🫀 Néphropédiatrie", q:"La tension artérielle se normalise quand dans la GNAPI ?",
+   opts:["2 semaines","6 semaines","8 semaines","10 semaines"], ans:0,
+   expl:"L'HTA dans la GNAPI se normalise généralement en <b>2 semaines</b> avec le traitement approprié (restriction sodée, diurétiques)."},
+
+  {cat:"🫀 Néphropédiatrie", q:"Le syndrome néphritique aigu comporte :",
+   opts:["Une prise de poids + œdèmes membres inf. + natriurèse faible + hématurie + réduction filtration glomérulaire","a, b et d sont vraies","a, b et e sont vraies","a, b, d et e sont vraies"], ans:3,
+   expl:"Le <b>syndrome néphritique aigu</b> = HTA + œdèmes + hématurie + protéinurie modérée + réduction de la filtration glomérulaire + oligurie. La réponse <b>a,b,d,e</b> est la plus complète."},
+
+  {cat:"🫀 Néphropédiatrie", q:"La glomérulonéphrite aiguë post streptococcique :",
+   opts:["Se manifeste le plus souvent par un syndrome néphritique aigu","Est associée à une baisse du C3","Nécessite un régime sans sel","a et c sont vraies","a et b sont vraies"], ans:4,
+   expl:"La GNAPI : se manifeste par syndrome <b>néphritique</b> aigu (a) ET est associée à une <b>baisse du C3</b> (fraction du complément) (b). Elle nécessite un régime hyposodé (non « sans sel » strict). Réponse = <b>a et b</b>."},
+
+  {cat:"🫀 Néphropédiatrie", q:"L'évolution la plus habituelle de la glomérulonéphrite aiguë, dans 80% des cas chez l'enfant, se fait vers :",
+   opts:["La guérison simple sans séquelle clinique à 2 ans","La persistance d'une protéinurie rénale définitive","L'évolution vers l'insuffisance rénale chronique","L'insuffisance rénale rapide progressive"], ans:0,
+   expl:"La GNAPI évolue favorablement chez l'enfant : <b>guérison complète sans séquelle</b> dans plus de 80-95% des cas, généralement en < 2 ans."},
+
+  {cat:"🫀 Néphropédiatrie", q:"Concernant le mécanisme physiopathologique de l'œdème dans le syndrome néphrotique idiopathique :",
+   opts:["Fuite de protéines massive dans les urines","Carence en protéines","Utilisation des graisses par l'organisme comme source d'énergie","Carence en glucides"], ans:0,
+   expl:"Dans le <b>syndrome néphrotique</b>, l'œdème est dû à la <b>fuite massive de protéines (albumine) dans les urines</b> → hypoalbuminémie → ↓ pression oncotique → œdème."},
+
+  // FIEVRE & INFECTIONS
+  {cat:"🌡️ Fièvre & Maladies infectieuses", q:"Concernant l'examen clinique d'un enfant ayant de la fièvre :",
+   opts:["Les bébés sont en couche pour éviter de souiller la table d'examen et le médecin","Ne pas examiner les oreilles si l'enfant ne s'en plaint pas","Ne pas demander à l'enfant ses symptômes car il n'est pas fiable","On doit examiner la gorge de l'enfant"], ans:1,
+   expl:"Chez un enfant fébrile, on <em>doit</em> examiner les oreilles <b>même sans plainte</b> (OMA souvent silencieuse). On doit aussi examiner la gorge (d). L'examen est complet et systématique."},
+
+  {cat:"🌡️ Fièvre & Maladies infectieuses", q:"Concernant les situations où la fièvre représente une urgence, sauf :",
+   opts:["Toute fièvre chez un nouveau-né = infection materno-fœtale jusqu'à preuve du contraire","Une fièvre mal tolérée est une urgence thérapeutique","Un nourrisson fébrile se déshydrate très rapidement","Des cris vigoureux lors de l'examen clinique sont un signe de mauvaise tolérance de la fièvre"], ans:3,
+   expl:"Des cris vigoureux sont un signe de <b>bonne</b> tolérance (enfant réactif, pas de léthargie). C'est la réponse <b>SAUF</b> = signe de mauvaise tolérance est faux."},
+
+  {cat:"🌡️ Fièvre & Maladies infectieuses", q:"Quelles propositions font partie du traitement symptomatique de la fièvre ?",
+   opts:["Déshabillage de l'enfant","Majoration de l'hydratation","Paracétamol","a, b et c"], ans:3,
+   expl:"Le traitement de la fièvre = <b>déshabillage + hydratation + paracétamol</b>. Ces 3 mesures sont complémentaires et toutes recommandées."},
+
+  {cat:"🌡️ Fièvre & Maladies infectieuses", q:"Concernant la scarlatine :",
+   opts:["Le germe incriminé est le streptocoque β hémolytique du groupe B","Le germe incriminé est le streptocoque β hémolytique du groupe A","L'atteinte cutanée est un érythème maculo-papuleux","b et c"], ans:1,
+   expl:"La <b>scarlatine</b> est due au <b>streptocoque β-hémolytique du groupe A</b>. L'éruption est un érythème scarlatiniforme (rouge, diffus, en « papier de verre ») — non maculo-papuleux."},
+
+  {cat:"🌡️ Fièvre & Maladies infectieuses", q:"Les taches de Koplik sont pathognomoniques de :",
+   opts:["La scarlatine","La roséole","La rougeole","Le mégalérythème épidémique"], ans:2,
+   expl:"Les <b>taches de Koplik</b> (points blancs sur muqueuse buccale) sont pathognomoniques de la <b>rougeole</b>. Elles apparaissent 2 jours avant l'éruption cutanée."},
+
+  // PNEUMOLOGIE
+  {cat:"🫁 Pneumologie pédiatrique", q:"Une infection ou inflammation au niveau des bronches :",
+   opts:["Bronchiolite","Bronchite","Bronchiectasie","Pneumonie"], ans:1,
+   expl:"La <b>bronchite</b> est l'inflammation des bronches. La bronchiolite = bronchioles, la pneumonie = parenchyme pulmonaire, la bronchiectasie = dilatation permanente des bronches."},
+
+  {cat:"🫁 Pneumologie pédiatrique", q:"Pneumopathie accompagnée d'une inflammation de la plèvre avec épanchement :",
+   opts:["Pneumopathie aiguë","Pneumonie grave","Pleuro-pneumopathie","Cancer pulmonaire"], ans:2,
+   expl:"La <b>pleuro-pneumopathie</b> = pneumonie + pleurésie (épanchement pleural). C'est une complication grave de la pneumonie bactérienne."},
+
+  {cat:"🫁 Pneumologie pédiatrique", q:"L'agent pathogène le plus fréquent dans la pneumonie virale est :",
+   opts:["VRS","Adénovirus","Parvovirus B19","Cytomégalovirus"], ans:0,
+   expl:"Le <b>VRS</b> (Virus Respiratoire Syncytial) est la cause virale la plus fréquente de pneumonie et de bronchiolite chez le nourrisson (< 2 ans)."},
+
+  {cat:"🫁 Pneumologie pédiatrique", q:"L'agent pathogène le plus souvent responsable de la pneumonie bactérienne chez l'enfant est :",
+   opts:["Mycoplasma pneumoniae","Streptocoque pneumoniae","Staphylococcus aureus","Bordetella pertussis"], ans:1,
+   expl:"Le <b>Streptococcus pneumoniae</b> (pneumocoque) est la cause bactérienne la plus fréquente de pneumonie chez l'enfant, toutes tranches d'âge confondues."},
+
+  {cat:"🫁 Pneumologie pédiatrique", q:"La bactérie le plus souvent responsable de la pneumonie chez les enfants âgés de plus de 3 ans :",
+   opts:["Mycoplasma pneumoniae","Streptocoque pneumoniae","Staphylococcus aureus","Bordetella pertussis"], ans:0,
+   expl:"Chez l'enfant de <b>plus de 3 ans</b>, le <b>Mycoplasma pneumoniae</b> devient la cause principale (pneumonie atypique). Chez les < 3 ans, c'est le pneumocoque."},
+
+  {cat:"🫁 Pneumologie pédiatrique", q:"Chez les nourrissons infectés au VIH, le germe le plus souvent responsable de pneumonie et responsable au moins ¼ des décès chez ce groupe est :",
+   opts:["Mycoplasma pneumoniae","Streptocoque pneumoniae","Staphylococcus aureus","Pneumocystis Jiroveci"], ans:3,
+   expl:"Chez le nourrisson infecté par le <b>VIH</b>, le <b>Pneumocystis jiroveci</b> (anciennement carinii) est la principale cause de pneumonie opportuniste, responsable de 25%+ des décès."},
+
+  // DIARRHEE & DESHYDRATATION
+  {cat:"💧 Diarrhée & Déshydratation", q:"Une diarrhée invasive :",
+   opts:["D'origine bactérienne","Contient du sang et des glaires","Très liquidienne et abondante","a et b"], ans:3,
+   expl:"La diarrhée <b>invasive</b> = d'origine bactérienne (a) + contient sang et glaires (b). La diarrhée sécrétoire est très liquidienne et abondante (c)."},
+
+  {cat:"💧 Diarrhée & Déshydratation", q:"Sources de protéines, sauf :",
+   opts:["Viandes","Poissons","Pistache","Céréales"], ans:3,
+   expl:"Les <b>céréales</b> sont principalement une source de glucides (amidon), non de protéines. Les viandes, poissons et pistaches sont de bonnes sources protéiques."},
+
+  {cat:"💧 Diarrhée & Déshydratation", q:"Concernant la déshydratation isotonique :",
+   opts:["Perte d'eau > perte de sodium","Perte d'eau < perte de sodium","Perte d'eau = perte de sodium","Aucune"], ans:2,
+   expl:"La déshydratation <b>isotonique</b> = les pertes d'eau et de sodium sont proportionnelles (natrémie normale 135-145 mEq/L). C'est la forme la plus fréquente."},
+
+  {cat:"💧 Diarrhée & Déshydratation", q:"Le sérum de réhydratation orale pour les enfants avec malnutrition aiguë sévère :",
+   opts:["SRO","Resomal","Resomal + SRO","Gatorade"], ans:1,
+   expl:"Les enfants malnutris sévères doivent être réhydratés avec le <b>Resomal</b> (moins riche en sodium, plus riche en potassium) et NON le SRO standard (trop riche en sodium → risque de surcharge)."},
+
+  // VACCINATION
+  {cat:"💉 Vaccination pédiatrique", q:"Ce sont les vaccins qui composent le pentavalent :",
+   opts:["Diphtérie-tétanos-coqueluche-Polio-hépatite B","Diphtérie-tétanos-coqueluche-Haemophilus influenzae type b-hépatite B","Diphtérie-tétanos-coqueluche-hépatite B","Aucune"], ans:1,
+   expl:"Le <b>vaccin pentavalent</b> = DTC (Diphtérie + Tétanos + Coqueluche) + <b>Hib</b> (Haemophilus influenzae type b) + <b>Hépatite B</b> = 5 antigènes."},
+
+  {cat:"💉 Vaccination pédiatrique", q:"Concernant le vaccin ROR :",
+   opts:["Protège contre la rougeole, oreillon et la rubéole","Est donné à partir de 6 mois","a et b","Aucune"], ans:2,
+   expl:"Le <b>ROR</b> = Rougeole + Oreillons + Rubéole (a vrai). Il est donné à partir de <b>9 mois</b> en zone tropicale, et à <b>12 mois</b> en zone tempérée. La réponse c = a et b — b est faux (6 mois incorrect), mais le document indique c."},
+
+  {cat:"💉 Vaccination pédiatrique", q:"La vaccination utilise :",
+   opts:["L'immunité active naturelle","L'immunité passive naturelle","L'immunité active artificielle","L'immunité passive artificielle"], ans:3,
+   expl:"La vaccination induit une <b>immunité active artificielle</b> : on stimule le système immunitaire avec un antigène artificiel (vaccin) pour créer une mémoire immunologique."},
+
+  // PHARMACOLOGIE
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"Tous les antibactériens suivants sont néphrotoxiques, sauf :",
+   opts:["La vancomycine","L'amoxicilline","Le sulfaméthoxazole","La gentamycine","La streptomycine"], ans:1,
+   expl:"L'<b>amoxicilline</b> (pénicilline) n'est pas néphrotoxique. Les aminosides (gentamycine, streptomycine) et la vancomycine sont néphrotoxiques."},
+
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"La céphalosporine indiquée dans le traitement de la méningite bactérienne est :",
+   opts:["Une C1G","Une C2G","Une C3G","Une C4G","Une C5G"], ans:2,
+   expl:"Les <b>C3G</b> (Céphalosporine de 3e génération) comme la ceftriaxone et céfotaxime passent la barrière hémato-encéphalique et sont le traitement de référence des méningites bactériennes."},
+
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"L'antituberculeux de première ligne le plus hépatotoxique est :",
+   opts:["L'éthionamide","La pyrazinamide","L'isoniazide","La rifampicine","L'éthambutol"], ans:1,
+   expl:"La <b>pyrazinamide</b> est l'antituberculeux de première ligne le plus hépatotoxique. L'isoniazide est aussi hépatotoxique mais moins que la pyrazinamide."},
+
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"Tous ces antituberculeux inhibent la synthèse de la paroi des mycobactéries, sauf :",
+   opts:["Le prothionamide","L'amikacine","L'isoniazide","La pyrazinamide","L'éthionamide"], ans:1,
+   expl:"L'<b>amikacine</b> (aminoside) inhibe la <b>synthèse protéique</b> en se liant au ribosome 30S — elle n'agit PAS sur la paroi. Les autres (INH, ethionamide...) agissent sur la paroi bactérienne."},
+
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"L'inhibiteur de protéase pouvant donner la lithiase rénale est :",
+   opts:["Le ritonavir","L'atazanavir","L'amprénavir","L'indinavir","Le nelfinavir"], ans:3,
+   expl:"L'<b>indinavir</b> est l'inhibiteur de protéase associé à la lithiase rénale (calculs de cristaux d'indinavir). Recommandation : hydratation abondante."},
+
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"L'antirétroviral inactif sur le VIH-2 est :",
+   opts:["Le raltégravir","La névirapine","Le ténofovir","Le lopinavir","L'abacavir"], ans:1,
+   expl:"La <b>névirapine</b> (INNTI) est inactive sur le VIH-2 car le VIH-2 ne possède pas le site de liaison spécifique aux INNTI. Le VIH-2 est naturellement résistant à tous les INNTI."},
+
+  {cat:"💊 Pharmacologie anti-infectieuse", q:"L'antibactérien indiqué dans la prise en charge de la filariose lymphatique en raison de son effet macrofilaricide est :",
+   opts:["La doxycycline","Le tinidazole","La clindamycine","L'ivermectine","Le nitazoxanide"], ans:0,
+   expl:"La <b>doxycycline</b> est utilisée dans la filariose lymphatique pour son effet sur Wolbachia (endosymbiote des filaires), induisant un effet macrofilaricide indirect. L'ivermectine est microfilaricide."}
+];
+
+// ===== STATE =====
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let correctCount = 0;
+let wrongCount = 0;
+let quizStarted = false;
+
+// ===== PARTICLES =====
+function createParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['rgba(99,102,241,0.4)','rgba(139,92,246,0.4)','rgba(6,182,212,0.4)','rgba(245,158,11,0.3)'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 8 + 4;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*20+15}s;
+      animation-delay:${Math.random()*-20}s;
+    `;
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+// ===== QUIZ LOGIC =====
+function startQuiz() {
+  document.getElementById('intro-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  correctCount = 0; wrongCount = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const wrapper = document.getElementById('cardWrapper');
+  wrapper.style.animation = 'none';
+  void wrapper.offsetWidth;
+  wrapper.style.animation = 'cardEntrance 0.5s cubic-bezier(0.34,1.56,0.64,1) both';
+
+  document.getElementById('qCategory').textContent = q.cat;
+  document.getElementById('qNum').textContent = current + 1;
+  document.getElementById('qNumberLabel').textContent = `Question ${current+1} / ${questions.length}`;
+  document.getElementById('qText').textContent = q.q;
+
+  const caseEl = document.getElementById('qCase');
+  if (q.caseTxt) {
+    caseEl.style.display = 'block';
+    caseEl.innerHTML = '📋 <strong>Cas clinique :</strong> ' + q.caseTxt;
+  } else {
+    caseEl.style.display = 'none';
+  }
+
+  // Options
+  const opts = document.getElementById('optionsContainer');
+  opts.innerHTML = '';
+  const letters = ['A','B','C','D','E','F'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span class="opt-text">${opt}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    if (answers[current] !== null) {
+      btn.disabled = true;
+      if (i === q.ans) btn.classList.add('correct');
+      else if (i === answers[current]) btn.classList.add('wrong');
+    }
+    opts.appendChild(btn);
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box';
+  fb.innerHTML = '';
+  if (answers[current] !== null) {
+    const isCorrect = answers[current] === q.ans;
+    fb.className = `feedback-box show ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+    fb.innerHTML = `<div class="feedback-title">${isCorrect ? '✅ Bonne réponse !' : `❌ La bonne réponse était : ${letters[q.ans]}. ${q.opts[q.ans]}`}</div>${q.expl}`;
+  }
+
+  // Progress
+  const pct = Math.round((current + 1) / questions.length * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${current+1} / ${questions.length}`;
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  // Scores
+  document.getElementById('scoreCorrect').textContent = correctCount;
+  document.getElementById('scoreWrong').textContent = wrongCount;
+
+  // Nav buttons
+  document.getElementById('btnPrev').disabled = current === 0;
+  const isLast = current === questions.length - 1;
+  const nextBtn = document.getElementById('btnNext');
+  nextBtn.textContent = isLast ? '🏁 Terminer' : 'Suivant →';
+  nextBtn.onclick = isLast ? showResults : nextQuestion;
+}
+
+function selectAnswer(idx) {
+  if (answers[current] !== null) return;
+  const q = questions[current];
+  answers[current] = idx;
+  const isCorrect = idx === q.ans;
+  if (isCorrect) correctCount++;
+  else wrongCount++;
+
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === idx) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('feedbackBox');
+  const letters = ['A','B','C','D','E','F'];
+  fb.className = `feedback-box show ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+  fb.innerHTML = `<div class="feedback-title">${isCorrect ? '✅ Bonne réponse !' : `❌ La bonne réponse était : ${letters[q.ans]}. ${q.opts[q.ans]}`}</div>${q.expl}`;
+
+  showToast(isCorrect ? '✅' : '❌', isCorrect ? 'Bonne réponse !' : 'Incorrect !');
+  document.getElementById('scoreCorrect').textContent = correctCount;
+  document.getElementById('scoreWrong').textContent = wrongCount;
+}
+
+function nextQuestion() {
+  if (current < questions.length - 1) { current++; renderQuestion(); }
+}
+function prevQuestion() {
+  if (current > 0) { current--; renderQuestion(); }
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const result = document.getElementById('result-screen');
+  result.style.display = 'block';
+  result.style.animation = 'none';
+  void result.offsetWidth;
+  result.style.animation = 'cardEntrance 0.7s cubic-bezier(0.34,1.56,0.64,1) both';
+
+  const total = questions.length;
+  const answered = answers.filter(a => a !== null).length;
+  const skipped = total - answered;
+  const pct = Math.round(correctCount / total * 100);
+
+  document.getElementById('resCorrect').textContent = correctCount;
+  document.getElementById('resWrong').textContent = wrongCount;
+  document.getElementById('resSkip').textContent = skipped;
+  document.getElementById('ringPct').textContent = pct + '%';
+
+  let emoji, title, msg;
+  if (pct >= 85) { emoji='🏆'; title='Excellent !'; msg='Performance remarquable ! Vous maîtrisez parfaitement ces sujets.'; }
+  else if (pct >= 70) { emoji='🥇'; title='Très bien !'; msg='Bonne performance ! Quelques points à consolider.'; }
+  else if (pct >= 55) { emoji='📚'; title='Passable'; msg='Des lacunes à combler. Révisez les explications détaillées.'; }
+  else { emoji='💪'; title='À améliorer'; msg='Courage ! Relisez les cours et recommencez pour progresser.'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg + ` (${correctCount}/${total} correctes)`;
+
+  // Animate ring
+  const circumference = 2 * Math.PI * 68;
+  const offset = circumference - (pct / 100) * circumference;
+  setTimeout(() => {
+    document.getElementById('ringFill').style.strokeDashoffset = offset;
+  }, 200);
+
+  if (pct >= 70) launchConfetti();
+}
+
+function restartQuiz() {
+  document.getElementById('result-screen').style.display = 'none';
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  correctCount = 0; wrongCount = 0;
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQuestion();
+}
+
+function reviewAnswers() {
+  document.getElementById('result-screen').style.display = 'none';
+  current = 0;
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQuestion();
+}
+
+// ===== TOAST =====
+function showToast(icon, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ===== CONFETTI =====
+function launchConfetti() {
+  const colors = ['#3b6cf8','#7c3aed','#06b6d4','#f59e0b','#10b981','#ef4444'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      const size = Math.random() * 10 + 6;
+      c.style.cssText = `
+        width:${size}px;height:${size}px;
+        left:${Math.random()*100}vw;
+        top:-20px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        border-radius:${Math.random()>0.5?'50%':'2px'};
+        animation-duration:${Math.random()*2+2}s;
+        animation-delay:${Math.random()*0.5}s;
+      `;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 30);
+  }
+}
+</script>
+</body>
+</html>
